@@ -1,0 +1,159 @@
+import pandas as pd
+import io # Bu kütüphane, metin verisini dosya gibi okumak için kullanılır.
+import matplotlib.pyplot as plt # Görselleştirme için
+
+print("Pandas projesi başlıyor...\n")
+
+# --- Adım 1: Veri Seti Oluşturma ---
+# Normalde bu veriyi bir CSV veya Excel dosyasından okurduk (pd.read_csv)
+# Ama basitlik olması için veriyi bir metin olarak burada tanımlıyoruz.
+# io.StringIO, bu metni bir dosyaymış gibi davranmamızı sağlar.
+
+veri = """Tarih,Urun,Kategori,Miktar,BirimFiyat
+2023-10-01,Laptop,Elektronik,5,1500
+2023-10-01,Klavye,Elektronik,10,100
+2023-10-02,Mouse,Elektronik,15,50
+2023-10-02,Kitap,Kırtasiye,20,20
+2023-10-03,Laptop,Elektronik,3,1500
+2023-10-03,Defter,Kırtasiye,30,10
+2023-10-04,Kitap,Kırtasiye,10,20
+2023-10-04,Klavye,Elektronik,5,100
+"""
+
+# Veriyi bir Pandas DataFrame'e yükleyelim
+df = pd.read_csv(io.StringIO(veri))
+
+
+# --- Adım 2: Veriyi Keşfetme ---
+# Verinin ilk 5 satırına bakalım
+print("--- Veri Setinin İlk 5 Satırı ---")
+print(df.head())
+print("\n")
+
+# Veri setinin yapısı ve türleri hakkında bilgi alalım
+print("--- Veri Seti Bilgisi (Info) ---")
+df.info()
+print("\n")
+
+
+# --- Adım 3: Veri Manipülasyonu (Yeni Sütun Ekleme) ---
+# Her bir satış için toplam geliri hesaplayalım
+# Yeni bir 'ToplamGelir' sütunu ekliyoruz (Miktar * BirimFiyat)
+df['ToplamGelir'] = df['Miktar'] * df['BirimFiyat']
+
+print("--- 'ToplamGelir' Sütunu Eklendikten Sonra ---")
+print(df.head())
+print("\n")
+
+
+# --- Adım 4: Temel Analizler ---
+
+# 1. Toplam Ciro (Tüm satışlardan elde edilen toplam gelir)
+toplam_ciro = df['ToplamGelir'].sum()
+print(f"** Toplam Ciro: {toplam_ciro} TL **\n")
+
+# 2. Hangi üründen toplam kaç adet satılmış?
+# 'Urun' sütununa göre grupla ve 'Miktar' sütununu topla
+urun_bazli_satis = df.groupby('Urun')['Miktar'].sum()
+print("--- Ürün Bazlı Toplam Satış Adetleri ---")
+print(urun_bazli_satis)
+print("\n")
+
+# 3. Hangi kategoriden toplam ne kadar gelir elde edilmiş?
+# 'Kategori' sütununa göre grupla ve 'ToplamGelir' sütununu topla
+kategori_bazli_gelir = df.groupby('Kategori')['ToplamGelir'].sum().sort_values(ascending=False)
+print("--- Kategori Bazlı Toplam Gelirler (Sıralı) ---")
+print(kategori_bazli_gelir)
+print("\n")
+
+# 4. En çok gelir getiren ürün hangisi?
+urun_bazli_gelir = df.groupby('Urun')['ToplamGelir'].sum().sort_values(ascending=False)
+print("--- Ürün Bazlı Toplam Gelirler (Sıralı) ---")
+print(urun_bazli_gelir)
+print("\n")
+
+
+# --- Adım 5: (Bonus) Görselleştirme ---
+# Kategorilerin toplam gelirlerini bir çubuk grafikte gösterelim
+print("Grafik oluşturuluyor (Kategori Bazlı Gelirler)...")
+
+kategori_bazli_gelir.plot(kind='bar', color=['blue', 'green'])
+plt.title('Kategorilere Göre Toplam Gelir')
+plt.xlabel('Kategori')
+plt.ylabel('Toplam Gelir (TL)')
+plt.xticks(rotation=0) # Kategori isimlerini yatay yazdır
+plt.tight_layout() # Grafiğin düzgün sığması için
+
+# Grafiği 'kategori_gelir.png' adıyla kaydet ve ekranda göster
+plt.savefig('kategori_gelir.png')
+plt.show()
+
+
+OUTPUT:
+
+--- Veri Setinin İlk 5 Satırı ---
+        Tarih    Urun    Kategori  Miktar  BirimFiyat
+0  2023-10-01  Laptop  Elektronik       5        1500
+1  2023-10-01  Klavye  Elektronik      10         100
+2  2023-10-02   Mouse  Elektronik      15          50
+3  2023-10-02   Kitap   Kırtasiye      20          20
+4  2023-10-03  Laptop  Elektronik       3        1500
+
+
+--- Veri Seti Bilgisi (Info) ---
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 8 entries, 0 to 7
+Data columns (total 5 columns):
+ #   Column      Non-Null Count  Dtype
+---  ------      --------------  -----
+ 0   Tarih       8 non-null      object
+ 1   Urun        8 non-null      object
+ 2   Kategori    8 non-null      object
+ 3   Miktar      8 non-null      int64
+ 4   BirimFiyat  8 non-null      int64
+dtypes: int64(2), object(3)
+memory usage: 452.0+ bytes
+
+
+--- 'ToplamGelir' Sütunu Eklendikten Sonra ---
+        Tarih    Urun    Kategori  Miktar  BirimFiyat  ToplamGelir
+0  2023-10-01  Laptop  Elektronik       5        1500         7500
+1  2023-10-01  Klavye  Elektronik      10         100         1000
+2  2023-10-02   Mouse  Elektronik      15          50          750
+3  2023-10-02   Kitap   Kırtasiye      20          20          400
+4  2023-10-03  Laptop  Elektronik       3        1500         4500
+
+
+** Toplam Ciro: 15150 TL **
+
+--- Ürün Bazlı Toplam Satış Adetleri ---
+Urun
+Defter    30
+Kitap     30
+Klavye    15
+Laptop     8
+Mouse     15
+Name: Miktar, dtype: int64
+
+
+--- Kategori Bazlı Toplam Gelirler (Sıralı) ---
+Kategori
+Elektronik    14250
+Kırtasiye       900
+Name: ToplamGelir, dtype: int64
+
+
+--- Ürün Bazlı Toplam Gelirler (Sıralı) ---
+Urun
+Laptop    12000
+Klavye     1500
+Mouse       750
+Kitap       600
+Defter      300
+Name: ToplamGelir, dtype: int64
+
+Oluşan png : 'kategori_gelir.png
+
+
+
+print("\nProje tamamlandı. 'kategori_gelir.png' dosyası oluşturuldu.")
